@@ -1,0 +1,46 @@
+# Build output
+/build/
+/Liquid.exe
+*.obj
+*.pdb
+*.ilk
+/keys/build/
+/keys/host/LiquidKeys.exe
+/keys/host/com.liquid.keys.json
+
+# Your own settings and state (made on first run)
+/config.ini
+/layout.txt
+/hidden-windows.txt
+/tray-state.txt
+*.log
+/snapshots/
+
+# Wallpapers: bring your own (WacOS ships none)
+/wallpapers/*
+!/wallpapers/README.md
+/*.jpg
+/*.jpeg
+/*.png
+
+# Icons you add yourself
+/icons/*
+!/icons/README.txt
+
+# Air Ring: Python environment, downloaded models, your face and gesture data, your settings
+/air-ring/.venv/
+/air-ring/models/
+/air-ring/data/
+/air-ring/config.json
+/air-ring/__pycache__/
+/air-ring/*.log
+
+# Local-only tools and experiments
+/boot/
+/tools/make-boot-logo.py
+/tools/set-wallpaper.ps1
+/tools/startup-cleanup.ps1
+/tools/startup-cleanup-admin.ps1
+/spicetify-test/
+/.claude/
+*.bak

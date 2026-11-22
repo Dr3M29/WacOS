@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid Keys test</title>
+<style>
+  :root { color-scheme: light dark; --bg: #f5f5f7; --fg: #1d1d1f; --muted: #555; --card: #fff; --line: #d8d8dc; --accent: #0a66d6; --ok: #137333; --bad: #b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111113; --fg: #f5f5f7; --muted: #b8b8bd; --card: #1c1c1e; --line: #333338; --accent: #4ea1ff; --ok: #5bd17a; --bad: #ff8a80; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 640px; margin: 48px auto; padding: 0 16px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p { color: var(--muted); margin: 0 0 20px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  button { cursor: pointer; font: 600 14px/1 inherit; padding: 12px 18px; min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--fg); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:hover { filter: brightness(1.08); }
+  button:active { filter: brightness(.92); }
+  button:disabled { cursor: not-allowed; opacity: .5; }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; white-space: pre-wrap; word-break: break-all; font: 13px/1.5 Consolas, monospace; min-height: 3em; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Liquid Keys test</h1>
+  <p>A local page for trying Liquid's passkeys. It runs only on this PC, checks every signature itself, and nothing is sent anywhere.</p>
+  <div class="row">
+    <button class="primary" id="make">Make a passkey</button>
+    <button id="signin" disabled>Sign in with it</button>
+  </div>
+  <pre id="log" aria-live="polite">Nothing yet. Press "Make a passkey".</pre>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const out = (msg, cls) => { const l = $("log"); l.className = cls || ""; l.textContent = msg; };
+const b64u = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+let saved = null;   // {id, spki}
+
+$("make").onclick = async () => {
+  out("Asking for a passkey...");
+  try {
+    const c = await navigator.credentials.create({publicKey: {
+      rp: {id: "localhost", name: "Liquid Keys test"},
+      user: {id: new TextEncoder().encode("liquid-test-user"), name: "tester@localhost", displayName: "Tester"},
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      pubKeyCredParams: [{type: "public-key", alg: -7}],
+      authenticatorSelection: {residentKey: "required", userVerification: "required"},
+    }});
+    saved = {id: c.rawId, spki: c.response.getPublicKey()};
+    $("signin").disabled = false;
+    out(`Passkey made.\nid ${c.id}\nsaved by ${c.authenticatorAttachment || "?"}\nalgorithm ${c.response.getPublicKeyAlgorithm()}\nNow press "Sign in with it".`, "ok");
+  } catch (e) { out(`Not made: ${e.name}: ${e.message}`, "bad"); }
+};
+
+// WebCrypto wants ECDSA signatures as r||s; WebAuthn gives DER.
+function derToRaw(der) {
+  const d = new Uint8Array(der); let i = 2;
+  const part = () => { i++; let n = d[i++]; let v = d.slice(i, i + n); i += n; while (v.length > 32 && v[0] === 0) v = v.slice(1); const o = new Uint8Array(32); o.set(v, 32 - v.length); return o; };
+  const r = part(), s = part(), out = new Uint8Array(64); out.set(r); out.set(s, 32); return out;
+}
+
+$("signin").onclick = async () => {
+  out("Signing in...");
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const a = await navigator.credentials.get({publicKey: {challenge, rpId: "localhost", allowCredentials: [{type: "public-key", id: saved.id}], userVerification: "required"}});
+    const cd = JSON.parse(new TextDecoder().decode(a.response.clientDataJSON));
+    const auth = new Uint8Array(a.response.authenticatorData);
+    const key = await crypto.subtle.importKey("spki", saved.spki, {name: "ECDSA", namedCurve: "P-256"}, false, ["verify"]);
+    const cdHash = new Uint8Array(await crypto.subtle.digest("SHA-256", a.response.clientDataJSON));
+    const signed = new Uint8Array(auth.length + 32); signed.set(auth); signed.set(cdHash, auth.length);
+    const good = await crypto.subtle.verify({name: "ECDSA", hash: "SHA-256"}, key, derToRaw(a.response.signature), signed);
+    const rpHash = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("localhost")));
+    const checks = [
+      ["signature verifies", good],
+      ["challenge matches", cd.challenge === b64u(challenge)],
+      ["origin is this page", cd.origin === location.origin],
+      ["type is webauthn.get", cd.type === "webauthn.get"],
+      ["site hash is localhost", rpHash.every((v, k) => v === auth[k])],
+      ["user verified flag", (auth[32] & 4) === 4],
+    ];
+    const allOk = checks.every(c => c[1]);
+    out(checks.map(([n, v]) => `${v ? "ok  " : "FAIL"} ${n}`).join("\n") + (allOk ? "\n\nSigned in." : "\n\nSomething is wrong."), allOk ? "ok" : "bad");
+  } catch (e) { out(`Not signed in: ${e.name}: ${e.message}`, "bad"); }
+};
+</script>
+</body>
+</html>

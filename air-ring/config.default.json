@@ -1,0 +1,82 @@
+{
+  "_help": "Air Ring's settings. Open this from System Settings > Air Gestures > Open Settings File; Air Ring reads it again when it restarts. Actions: {\"keys\": [...]} presses a combo (pynput names: ctrl, cmd (=Win), alt, shift, tab, left, right, media_next, ...), \"repeat\" presses it N times. {\"launch\": \"...\"} opens an app, a shell:AppsFolder ID, a file or a URL. null = do nothing.",
+  "camera": "auto",
+  "_camera_help": "\"auto\" = first real webcam (skips phone/Quest/OBS/Moonlight virtual cams). Or part of a camera's name, e.g. \"Logitech\".",
+  "exposure": -5,
+  "_exposure_help": "-6 = 30 fps with sharp frames. -5 if the image is too dark, -7 if fast moves still blur. null = camera auto.",
+  "mic": null,
+  "_mic_help": "Only used for finger snaps (snap_enabled). null = the default microphone, or part of a microphone's name.",
+  "snap_enabled": false,
+  "arm_with": [],
+  "click_with": [],
+  "pointing": false,
+  "swipes_need_arm": false,
+  "swipe_dirs": [],
+  "hand_detect_conf": 0.3,
+  "hand_presence_conf": 0.24,
+  "hand_track_conf": 0.24,
+  "hand_input_width": 256,
+  "hand_denoise": 3,
+  "low_light_target": 0,
+  "_hand_input_help": "The hand model sees the camera shrunk to hand_input_width pixels wide and blurred with a hand_denoise x hand_denoise kernel (0 = no blur). In a dim room the full-size frame is too grainy for its palm finder; 256 wide, blur 3 and confidence 0.3 find the hand far more often. low_light_target brightens frames before that (0 = off).",
+  "_slim_help": "Slim mode: only pinch-drag volume and open-hand swipe left/right, no snap needed. For the older features: snap_enabled true, arm_with [\"snap\"], click_with [\"snap\", \"side_tap\"], pointing true, swipes_need_arm true, and add their bindings.",
+  "_arm_help": "What arms it / what counts as a click while armed. Options: \"snap\", \"side_tap\" (thumb taps the side of your pointer), \"pinch\" (thumb + pointer tips).",
+  "start_paused": false,
+  "pinch_volume": {
+    "enabled": true,
+    "needs_arm": false,
+    "on": 0.66,
+    "off": 0.85,
+    "min_spread": 0.75,
+    "min_thumb_out": 1.0,
+    "min_index_bend": 50,
+    "hold_s": 0.2,
+    "still_tol": 0.07,
+    "release_s": 0.15,
+    "deadzone": 0.03,
+    "step": 0.025,
+    "smooth": 0.35,
+    "max_steps_per_frame": 2,
+    "debug": false
+  },
+  "_pinch_volume_help": "Pinch thumb + pointer, hold still ~0.2 s, then move your hand up/down: one volume step per 'step' of travel (fraction of the camera height). Open the pinch to stop. 'on'/'off' = how close the fingertips must get / how far apart to count as released (palm lengths; a pinch reads about 0.5); release_s = how long it must look open. A fist also puts the thumb by the pointer, so the hand must look like a pinch too: pointer tip at least min_spread from the middle knuckle, thumb tip at least min_thumb_out from the pinky knuckle, pointer bent at least min_index_bend degrees. needs_arm true = only after a snap.",
+  "bindings": {
+    "swipe_right": {
+      "keys": [
+        "media_next"
+      ]
+    },
+    "swipe_left": {
+      "keys": [
+        "media_previous"
+      ]
+    }
+  },
+  "tuning": {
+    "arm_window_s": 3.0,
+    "hold_s": 0.7,
+    "swipe_window_s": 0.6,
+    "swipe_dist": 0.25,
+    "swipe_facing": 0.35,
+    "swipe_flat_frac": 0.4,
+    "swipe_straight": 1.7,
+    "_swipe_help": "Left/right swipe: the wrist moves swipe_dist (fraction of the image width) within swipe_window_s, at least swipe_straight times more sideways than up/down. In the first half of the move, swipe_flat_frac of frames need 3+ fingers out and the palm (or back) at least swipe_facing toward the camera (0 = edge-on, 1 = flat).",
+    "return_block_s": 1.3,
+    "swipe_refractory_s": 1.0,
+    "cooldown_s": 0.45,
+    "pinch_on": 0.2,
+    "pinch_off": 0.45,
+    "pinch_tap_max_s": 0.5,
+    "arm_grace_s": 0.35,
+    "side_on": 0.16,
+    "side_off": 0.3,
+    "side_tap_max_s": 0.45,
+    "still_tol": 0.035,
+    "idle_fps": 12,
+    "snap_level": 0.006,
+    "snap_ratio": 8.0,
+    "snap_hf": 0.55,
+    "snap_decay": 0.3,
+    "snap_needs_prepose": true
+  }
+}

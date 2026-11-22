@@ -1,0 +1,41 @@
+{
+    "manifest_version":  3,
+    "name":  "Liquid Keys",
+    "version":  "0.1.2",
+    "description":  "Passkeys kept by Liquid on this PC. You sign in by looking at the camera.",
+    "key":  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAh9ziybvqOf6s9VmcgmcZKF718jTsVg2p3b8EASCB0qyuRr9Y3N2FDoQYWdTS/f/CFLQPgSijB+pHZclA7DY94fpahGTyH93M8xs83EIZMQDS9eEsNdNzWGpaqoX1tahfcyvsTnnGUDEJh+81z0IC43VaxFB37x9Wb1bHgMeZflIGgDoRde0d9XKNPNI2uYB4RmZeUmOgMp5evRAd0uzvfEzyar94S8+TjxUubpEOVuiBsQbFPikfPdO2IfUasmh+5uj+aJlgQpu9II2YUMmQWR+nD0Gyh+tlEcC0DSQYfFNk5VbyNDYtuuw6u1OP+ihlhWK8ZAQ0rlZrDn7cjcYLWwIDAQAB",
+    "permissions":  [
+                        "nativeMessaging"
+                    ],
+    "background":  {
+                       "service_worker":  "background.js"
+                   },
+    "content_scripts":  [
+                            {
+                                "matches":  [
+                                                "https://*/*",
+                                                "http://localhost/*"
+                                            ],
+                                "js":  [
+                                           "page.js"
+                                       ],
+                                "world":  "MAIN",
+                                "run_at":  "document_start",
+                                "all_frames":  true
+                            },
+                            {
+                                "matches":  [
+                                                "https://*/*",
+                                                "http://localhost/*"
+                                            ],
+                                "js":  [
+                                           "bridge.js"
+                                       ],
+                                "run_at":  "document_start",
+                                "all_frames":  true
+                            }
+                        ],
+    "host_permissions":  [
+                             "http://127.0.0.1/*"
+                         ]
+}
